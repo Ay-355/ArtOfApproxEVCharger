@@ -65,40 +65,41 @@ for location, group in df.groupby('Address'):
 
 
 
-print("Arrival Rates (λ) per Location:")
-for location, rate in arrival_rates.items():
-    print(f"{location}: {rate:.4f} vehicles per hour")
+# print("Arrival Rates (λ) per Location:")
+# for location, rate in arrival_rates.items():
+#     print(f"{location}: {rate:.4f} vehicles per hour")
 
-print("Service Rates (μ) per Location:")
-for location, rate in service_rates.items():
-    print(f"{location}: {rate:.4f} vehicles per hour")
+# print("Service Rates (μ) per Location:")
+# for location, rate in service_rates.items():
+#     print(f"{location}: {rate:.4f} vehicles per hour")
 
-print("Utilization (rho) per Location:")
-for location, util in utilization.items():
-    print(f"{location}: {util:.4f}")
+# print("Utilization (rho) per Location:")
+# for location, util in utilization.items():
+#     print(f"{location}: {util:.4f}")
 
-print("Average Queue Length (Lq) per Location:")
-for location, lq in queue_lengths.items():
-    print(f"{location}: {lq:.4f} vehicles")
+# print("Average Queue Length (Lq) per Location:")
+# for location, lq in queue_lengths.items():
+#     print(f"{location}: {lq:.4f} vehicles")
 
 print("Average Wait Time in Queue (Wq) per Location:")
 for location, wq in average_wait_times.items():
     print(f"{location}: {wq:.4f} hours")
 
-print("Probability of there being zero demand (P0) per Location:")
-for location, p0 in p0_.items():
-    print(f"{location}: {p0:.4f}")
+# print("Probability of there being zero demand (P0) per Location:")
+# for location, p0 in p0_.items():
+#     print(f"{location}: {p0:.4f}")
 
 
 
 # heatmap
 
-map = folium.Map(location=[df['Latitude'].mean(), df['Longitude'].mean()])
-
+map = folium.Map(location=[df['Latitude'].mean(), df['Longitude'].mean()], zoom_start=14)
+_vmin=min(average_wait_times.values()), 
+_vmax=max(average_wait_times.values())
 colormap = branca.colormap.LinearColormap(
     colors=['green', 'yellow', 'orange', 'red'], 
-    vmin=min(average_wait_times.values()), 
-    vmax=max(average_wait_times.values())
+    vmin=_vmin, 
+    vmax=_vmax
 ).to_step(n=30)
 
 for location, wq in average_wait_times.items():
@@ -118,3 +119,57 @@ for location, wq in average_wait_times.items():
 colormap.add_to(map)
 
 map.save('avg_wait_time_map.html')
+
+
+# if wait time is too long, add charger and see how that affects
+
+for location, wq in average_wait_times.items():
+    # wait time on avg is greater than 10 min
+    if (wq > (1/6)):
+        for location_, group in df.groupby('Address'):
+            if location == location_:
+                group = group.sort_values(by='Start_Datetime')
+                interarrival_times = group['Start_Datetime'].diff().dt.total_seconds() / 3600
+                arrival_rate_lambda = 1 / interarrival_times.mean()
+                arrival_rates[location] = arrival_rate_lambda
+                
+                service_rate_mu = 1 / group['Charging_Time_hours'].mean()
+                service_rates[location] = service_rate_mu
+                
+                c = stations_per_location.get(location) + 1
+                
+                rho, lq, wq, p0 = mmc_queue(arrival_rate_lambda, service_rate_mu, c)
+                utilization[location] = rho
+                queue_lengths[location] = lq
+                average_wait_times[location] = wq
+                p0_[location] = p0
+            
+                print(f"Added 1 charger to location: {location}. New average wait time: {wq:.4f} hours")
+
+
+
+map = folium.Map(location=[df['Latitude'].mean(), df['Longitude'].mean()], zoom_start=14)
+
+colormap = branca.colormap.LinearColormap(
+    colors=['green', 'yellow', 'orange', 'red'], 
+    vmin=_vmin, 
+    vmax=_vmax
+).to_step(n=30)
+
+for location, wq in average_wait_times.items():
+    lat = df.loc[df['Address'] == location, 'Latitude'].values[0]
+    lon = df.loc[df['Address'] == location, 'Longitude'].values[0]
+    
+    folium.CircleMarker(
+        location=[lat, lon],
+        radius=15,
+        color=colormap(wq),
+        fill=True,
+        fill_color=colormap(wq),
+        fill_opacity=0.4,
+        popup=f"{location}: {wq:.2f} hours"
+    ).add_to(map)
+
+colormap.add_to(map)
+
+map.save('avg_wait_time_map_new.html')
