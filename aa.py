@@ -1,6 +1,7 @@
 import pandas as pd
 from scipy.special import factorial
-
+import folium
+import branca
 file_path = "~/OneDrive/Documents/Palo_Alto_Final.csv"
 df = pd.read_csv(file_path, low_memory=False)
 
@@ -87,3 +88,33 @@ for location, wq in average_wait_times.items():
 print("Probability of there being zero demand (P0) per Location:")
 for location, p0 in p0_.items():
     print(f"{location}: {p0:.4f}")
+
+
+
+# heatmap
+
+map = folium.Map(location=[df['Latitude'].mean(), df['Longitude'].mean()])
+
+colormap = branca.colormap.LinearColormap(
+    colors=['green', 'yellow', 'orange', 'red'], 
+    vmin=min(average_wait_times.values()), 
+    vmax=max(average_wait_times.values())
+).to_step(n=30)
+
+for location, wq in average_wait_times.items():
+    lat = df.loc[df['Address'] == location, 'Latitude'].values[0]
+    lon = df.loc[df['Address'] == location, 'Longitude'].values[0]
+    
+    folium.CircleMarker(
+        location=[lat, lon],
+        radius=15,
+        color=colormap(wq),
+        fill=True,
+        fill_color=colormap(wq),
+        fill_opacity=0.4,
+        popup=f"{location}: {wq:.2f} hours"
+    ).add_to(map)
+
+colormap.add_to(map)
+
+map.save('avg_wait_time_map.html')
