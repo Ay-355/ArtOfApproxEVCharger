@@ -65,29 +65,29 @@ for location, group in df.groupby('Address'):
 
 
 
-# print("Arrival Rates (λ) per Location:")
-# for location, rate in arrival_rates.items():
-#     print(f"{location}: {rate:.4f} vehicles per hour")
+print("Arrival Rates (λ) per Location:")
+for location, rate in arrival_rates.items():
+    print(f"{location}: {rate:.4f} vehicles per hour")
 
-# print("Service Rates (μ) per Location:")
-# for location, rate in service_rates.items():
-#     print(f"{location}: {rate:.4f} vehicles per hour")
+print("Service Rates (μ) per Location:")
+for location, rate in service_rates.items():
+    print(f"{location}: {rate:.4f} vehicles per hour")
 
-# print("Utilization (rho) per Location:")
-# for location, util in utilization.items():
-#     print(f"{location}: {util:.4f}")
+print("Utilization (rho) per Location:")
+for location, util in utilization.items():
+    print(f"{location}: {util:.4f}")
 
-# print("Average Queue Length (Lq) per Location:")
-# for location, lq in queue_lengths.items():
-#     print(f"{location}: {lq:.4f} vehicles")
+print("Average Queue Length (Lq) per Location:")
+for location, lq in queue_lengths.items():
+    print(f"{location}: {lq:.4f} vehicles")
 
 print("Average Wait Time in Queue (Wq) per Location:")
 for location, wq in average_wait_times.items():
     print(f"{location}: {wq:.4f} hours")
 
-# print("Probability of there being zero demand (P0) per Location:")
-# for location, p0 in p0_.items():
-#     print(f"{location}: {p0:.4f}")
+print("Probability of there being zero demand (P0) per Location:")
+for location, p0 in p0_.items():
+    print(f"{location}: {p0:.4f}")
 
 
 
