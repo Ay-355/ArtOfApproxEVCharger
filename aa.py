@@ -26,24 +26,24 @@ queue_lengths = {}
 p0_ = {}
 average_wait_times = {}
 
-def mmc_queue(λ, μ, c):
-    if λ == 0 or μ == 0 or c == 0: return 0, 0, 0
+def mmc_queue(ar, sr, c):
+    if ar == 0 or sr == 0 or c == 0: return 0, 0, 0
     # intensity
-    rho = λ / (c * μ)
+    rho = ar / (c * sr)
     
-    sum_ = sum((λ / μ) ** n / factorial(n) for n in range(c))
+    sum_ = sum((ar / sr) ** n / factorial(n) for n in range(c))
     # probabilty of 0 cars being there
-    p0 = 1 / (sum_ + ((λ / μ) ** c / (factorial(c) * (1 - rho))) if rho < 1 else float('inf'))
+    p0 = 1 / (sum_ + ((ar / sr) ** c / (factorial(c) * (1 - rho))) if rho < 1 else float('inf'))
     
     if rho < 1:
         # queue length
-        lq = (p0 * ((λ / μ) ** c) * rho) / (factorial(c) * ((1 - rho) ** 2))
+        lq = (p0 * ((ar / sr) ** c) * rho) / (factorial(c) * ((1 - rho) ** 2))
     else:
         # arrival rate greater than service rate, not good
         lq = float('inf')
     
     # wait time
-    wq = lq / λ if λ > 0 else 0
+    wq = lq / ar if ar > 0 else 0
     return rho, lq, wq, p0
 
 for location, group in df.groupby('Address'):
@@ -65,27 +65,27 @@ for location, group in df.groupby('Address'):
 
 
 
-print("Arrival Rates (λ) per Location:")
+print("\nArrival Rates (λ) per Location:")
 for location, rate in arrival_rates.items():
     print(f"{location}: {rate:.4f} vehicles per hour")
 
-print("Service Rates (μ) per Location:")
+print("\nService Rates (μ) per Location:")
 for location, rate in service_rates.items():
     print(f"{location}: {rate:.4f} vehicles per hour")
 
-print("Utilization (rho) per Location:")
+print("\nUtilization (ρ) per Location:")
 for location, util in utilization.items():
     print(f"{location}: {util:.4f}")
 
-print("Average Queue Length (Lq) per Location:")
+print("\nAverage Queue Length (Lq) per Location:")
 for location, lq in queue_lengths.items():
     print(f"{location}: {lq:.4f} vehicles")
 
-print("Average Wait Time in Queue (Wq) per Location:")
+print("\nAverage Wait Time in Queue (Wq) per Location:")
 for location, wq in average_wait_times.items():
     print(f"{location}: {wq:.4f} hours")
 
-print("Probability of there being zero demand (P0) per Location:")
+print("\nProbability of there being zero demand (P0) per Location:")
 for location, p0 in p0_.items():
     print(f"{location}: {p0:.4f}")
 
@@ -145,7 +145,7 @@ for location, wq in average_wait_times.items():
                 p0_[location] = p0
             
                 print(f"Added 1 charger to location: {location}. New average wait time: {wq:.4f} hours")
-
+print("\n")
 
 
 map = folium.Map(location=[df['Latitude'].mean(), df['Longitude'].mean()], zoom_start=14)
